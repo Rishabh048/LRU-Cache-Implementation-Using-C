@@ -1,0 +1,136 @@
+
+int main()
+{
+    struct hash_table table;
+    
+    table.size = 7;
+    table.buckets = (struct node **) malloc(table.size*sizeof(struct node*)); // array of nodes 
+    
+    for(int i=0;i < table.size;i++)
+    {
+        table.buckets[i] = NULL;
+    }
+     
+    struct queue *newq = set_queue(newq);
+
+    int input_value;
+    printf("ENTER 1 TO INPUT VALUES : ");
+    scanf("%d",&input_value);
+    printf(" ENTER 1 TO INSERT APP IN THE DATABASE \n ENTER 2 TO SEARCH APP IN THE DATABASE \n ENTER 3 TO DELETE APP FROM THE DATABASE \n ENTER 4 TO PRINT THE DATABASE OF APPS \n ENTER 5 TO USE THE ANY APP \n ENTER 6 TO PRINT THE LRU CACHE \n");
+    while(input_value)
+    {
+        int choice;
+        printf("INPUT CHOICE: ");
+        scanf("%d",&choice);
+        if(choice == 1) 
+        {
+             struct node *newnode = set_node_data();
+             int index = generate_key(newnode->data.name); // using name
+             struct node *temp = insert_node(table.buckets, newnode, index);
+             table.buckets[index]  = temp;
+        }
+        else if(choice == 2)
+        {
+             char app_name[20];
+             printf("ENTER THE NAME OF THE APP YOU WANT TO SEARCH : ");
+             scanf("%s",&app_name);
+             int index = generate_key(app_name);
+
+             struct node *found = search(table.buckets[index],app_name);
+             if(found == NULL)
+             {
+               printf("APP NOT FOUND! \n");
+             }
+             else
+             {
+               printf("THE APP IS PRESENT IN THE DATABASE! \n");
+             }
+        }
+        else if(choice == 3)
+        {
+             char app_name[20];
+             printf("ENTER THE NAME OF THE APP THAT YOU WANT TO DELETE : ");
+             scanf("%s",&app_name);
+             int index = generate_key(app_name);
+             table.buckets[index] = delete_app(table.buckets[index],app_name);
+             // delete from the queue if present!
+             if(newq!=NULL)
+             {
+                 if(newq->head!=NULL) 
+                 {
+                     if(newq->head->next==NULL) // only one node
+                     {
+                         if(check(newq->head->data.name,app_name))
+                         {
+                             struct node *temp = newq->head;
+                             newq->head = NULL;
+                             newq->tail = NULL;
+
+                             newq->cache_cur_size = 0;
+                             free(temp);
+                         }
+                     }
+                     else // > 1 node 
+                     {
+                         // at beg
+                         if(check(newq->head->data.name,app_name))
+                         {
+                             struct node *temp = newq->head;
+                             newq->head = newq->head->next;
+                             newq->head->prev = NULL;
+
+                             newq->cache_cur_size -= 1;
+                             free(temp);
+                         }
+                         else
+                         {
+                             struct node *trav = newq->head;
+                             while(trav!=NULL && !check(trav->data.name,app_name))
+                             {
+                                 trav = trav->next;
+                             }
+                             
+                         if(trav!=NULL){ // present
+                           if(trav->next!=NULL)// at mid
+                           {
+                               trav->prev->next = trav->next;
+                               trav->next->prev = trav->prev;
+                               free(trav);
+                           }
+                           else // at end
+                           {
+                               newq->tail = trav->prev;
+                               newq->tail->next = NULL;
+                               trav->prev = NULL;
+                               free(trav);
+                           }
+                         }
+                       }
+                     }
+                     
+                 } 
+             }
+        }
+        else if(choice == 4)
+        {
+             print(table);
+        }
+        else if(choice == 5)
+        {
+             char app_name[20];
+             printf("ENTER THE NAME OF THE APP THAT YOU WANT TO USE : ");
+             scanf("%s",&app_name);
+             newq = insertq(table.buckets,newq,app_name);
+        }
+        else if(choice == 6)
+        {
+             printLRU(newq);
+        }
+        else
+        {
+          printf("WRONG CHOICE! \n");   
+        }
+        printf("WOULD YOU LIKE TO GO AGAIN?(ENTER 1 IF YES):");
+        scanf("%d",&input_value);
+    }
+}

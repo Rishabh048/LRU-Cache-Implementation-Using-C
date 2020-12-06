@@ -1,0 +1,17 @@
+struct app{  
+    int size;
+    char name[20];
+};
+
+struct app set_app_data()
+{       
+        struct app newapp;
+
+        printf("ENTER THE NAME OF THE APP: ");
+        //scanf("%[^\n]%*c",&newapp.name);
+        scanf("%s",&newapp.name);
+        printf("ENTER THE SIZE OF THE APP: ");
+        scanf("%d",&newapp.size);
+
+        return newapp;
+}

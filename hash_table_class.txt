@@ -1,0 +1,141 @@
+
+struct node{
+    struct app data;
+    struct node *next;
+    struct node *prev;
+};
+
+struct node* set_node_data()
+{
+      struct app newapp = set_app_data();    
+
+      struct node *curnode = (struct node *)malloc(sizeof(struct node));
+      curnode->data = newapp;
+      curnode->next = NULL;
+      curnode->prev = NULL;
+
+      return curnode;
+}
+
+struct hash_table{ // functions : insert, search, delete 
+    
+    struct node **buckets; // array of list 
+    int size; // always 7 or prime
+};
+
+struct node* insert_node(struct node **b, struct node *newnode,int index)
+{
+    if(b[index] == NULL)
+    { 
+      b[index] = newnode;
+    }
+    else
+    {
+       struct node *aux =  b[index];
+      
+       while(aux->next!=NULL)
+       {
+           aux = aux->next;
+       }
+       
+       aux->next = newnode;
+    }
+    return b[index];
+}
+
+int generate_key(char name[])
+{
+    int string_size = strlen(name);
+    
+    int constant = 3;
+
+    int key = 0;
+
+    for(int i=0;i<string_size;i++)
+    {
+        int smol_constant = pow(constant,i);
+        key += (smol_constant*name[i]);
+    }
+
+    return key%7; // size of bucket 
+}
+void print(struct hash_table table)
+{
+    printf("THE DIRECT ADDRESS TABLE HAS VALUES : \n");
+     for(int i=0;i<7;i++)
+     {
+         if(table.buckets[i])
+         {
+           struct node *aux = table.buckets[i];
+           //int count = 0;
+           while(aux)
+           {
+               //printf("KEY : ",i+count);
+               printf("[APP NAME : %s, SIZE : %d] ",aux->data.name,aux->data.size);
+               aux = aux->next;
+           }
+           printf("\n");
+         }
+     }
+     printf("\n");
+}
+int check(char st1[],char st2[])
+{
+    int i=0,j=0;
+    while(i < strlen(st1) && j < strlen(st2))
+    {
+        if(st1[i] != st2[j])
+        {
+            return 0;
+        }
+        i++;
+        j++;
+    }
+    if(i == strlen(st1) && j == strlen(st2)){return 1;}
+    
+    return 0;
+}
+struct node* search(struct node *curbucket,char str[])
+{
+     struct node *aux = curbucket;
+     while(aux && !check(aux->data.name,str))
+     {
+        aux = aux->next;
+     }
+
+     return aux;
+}
+struct node* delete_app(struct node *curbucket,char str[])
+{
+    if(curbucket == NULL)
+    {
+       return NULL;
+    }
+    
+    if(curbucket!=NULL && check(curbucket->data.name,str)) 
+    {
+       return curbucket->next;
+    }
+    
+    if(curbucket->next == NULL)
+    {
+        return curbucket;
+    }
+    
+    // first node can never be our answer and atleast 2 nodes 
+    
+    struct node *aux = curbucket;
+    
+    while(aux->next!=NULL && !check(aux->next->data.name,str))
+    {
+        aux = aux->next; 
+    }
+ 
+    if(aux->next!=NULL && check(aux->next->data.name,str))
+    {
+        aux->next = aux->next->next;
+    }
+    
+    return curbucket;
+    
+}

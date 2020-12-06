@@ -1,0 +1,196 @@
+struct queue{
+    struct node *head;
+    struct node *tail;
+    int cache_size;
+    int cache_cur_size;
+};
+
+struct queue* set_queue(struct queue *curq)
+{
+    curq = (struct queue*) malloc(sizeof(struct queue));
+    
+    curq->head = NULL;
+    curq->tail = NULL;
+
+    printf("ENTER THE SIZE OF THE CACHE(>1) :");
+    scanf("%d",&curq->cache_size);
+    if(curq->cache_size <= 1)
+    {
+        printf("CACHE SIZE HAS BEEN UPDATED TO 3! \n");
+        curq->cache_size = 3;
+    }
+     
+    curq->cache_cur_size = 0;
+    return curq;
+}
+
+struct queue* insertq(struct node **curnode, struct queue *curqueue,char appName[])
+{  
+    if(curqueue->head == NULL && curqueue->tail == NULL) // empty queue
+    {
+        // search in the database
+
+           int index = generate_key(appName);
+           struct node *newnode = search(curnode[index],appName);
+           
+           if(newnode == NULL) // not in the database
+           {
+               printf("THE APP NAME THAT YOU'VE ENTERED IS NOT PRESENT IN THE DATABASE! \n");
+               return curqueue;
+           }
+
+           struct node *permN = (struct node*) malloc(sizeof(struct node));
+           permN->data = newnode->data; // copy data
+           permN->next = NULL;
+           permN->prev = NULL;
+
+           curqueue->head = permN;
+           curqueue->tail = permN;
+           curqueue->cache_cur_size += 1;
+
+           return curqueue;
+    } 
+   // else if(1){return curqueue;}
+    else 
+    {
+       // already present 
+       struct node *aux = curqueue->head;
+      
+       while(aux!=NULL)
+       {
+           if(check(aux->data.name,appName) == 1) // yes
+           {
+                // at beg
+                if(aux == curqueue->head)
+                {
+                    // only one node
+                    if(curqueue->head->next == NULL)
+                    {
+                        return curqueue;
+                    }
+                    // >1 node
+                    else{
+                        curqueue->head->next->prev = NULL;
+                        curqueue->head = curqueue->head->next; // update head;
+                        
+                        aux->next = NULL;
+                        curqueue->tail->next = aux;
+                        aux->prev = curqueue->tail;
+                        curqueue->tail = aux; // update tail
+
+                        return curqueue;
+                    }
+                }
+
+                // mid
+                else if(aux->next!=NULL)
+                {
+                    struct node *aux2 = aux;
+                    aux->prev->next = aux->next;
+                    aux->next->prev = aux->prev;
+
+                    aux->next = NULL;
+                    aux->prev = NULL;
+
+                    curqueue->tail->next = aux;
+                    aux->prev = curqueue->tail;
+                    curqueue->tail = aux;
+                    return curqueue;
+                }
+
+                // at end
+                else{
+                    return curqueue;
+                }
+           }
+           aux = aux->next;
+       }
+       
+       // check for size and insert at the end + 
+
+        int index = generate_key(appName);
+        struct node *newnode = search(curnode[index],appName);
+        if(newnode == NULL) // not in the database
+        {
+            printf("THE APP NAME THAT YOU'VE ENTERED IS NOT PRESENT IN THE DATABASE! \n");
+            return curqueue;
+        }
+        
+        struct node *permN = (struct node*) malloc(sizeof(struct node));
+        permN->data = newnode->data; // copy data
+        permN->next = NULL;
+        permN->prev = NULL;
+
+       
+       if(curqueue->cache_cur_size == curqueue->cache_size) // remove first node
+       {
+           struct node *aux = curqueue->head;
+           curqueue->head = curqueue->head->next;
+           if(curqueue->head!=NULL){
+           curqueue->head->prev = NULL;
+           }           
+           free(aux);
+           curqueue->cache_cur_size -= 1;
+       }
+
+       curqueue->tail->next = permN;
+       permN->prev = curqueue->tail;
+       curqueue->tail = permN;
+       curqueue->cache_cur_size += 1;
+       return curqueue;
+    }
+}
+void printLRU(struct queue *curqueue)
+{
+    printf("ENTER 1 TO SEE THE QUEUE FROM THE HIGHEST PRIORITY TO THE LOWEST PRIORITY \nENTER 2 TO SEE THE QUEUE FROM THE LOWEST PRIORITY TO THE HIGHEST PRIORITY \n");
+    printf("HOW DO YOU WANT THE APPS IN THE QUEUE TO APPEAR ? :");
+    int choice;
+    scanf("%d",&choice);
+
+     
+    if(curqueue!=NULL)
+    {
+        if(choice == 1){
+        if(curqueue->tail == NULL)
+        {
+            printf("THE QUEUE IS EMPTY! \n");
+            return;
+        }
+        
+          struct node *aux = curqueue->tail;
+          while(aux!=NULL)
+          {
+            printf("[APP NAME : %s, size : %d] ",aux->data.name,aux->data.size);
+            aux = aux->prev;
+          }
+        }
+        else if(choice ==2){
+           if(curqueue->head == NULL)
+           {
+            printf("THE QUEUE IS EMPTY! \n");
+            return;
+           }
+        
+           struct node *aux = curqueue->head;
+           while(aux!=NULL)
+           {
+            printf("[APP NAME : %s, SIZE : %d] ",aux->data.name,aux->data.size);
+            aux = aux->next;
+           }
+        }
+        else
+        {
+            printf("WRONG CHOICE, WOULD YOU LIKE TO GO AGAIN(ENTER 1 IF YES)? :");
+            scanf("%d",&choice);
+            if(choice == 1)
+            {
+                printLRU(curqueue);
+            }
+        }
+        printf("\n");
+    }
+    else
+    {
+        printf("THE QUEUE HASN'T BEEN INITIALIZED YET \n");
+    }
+}
